@@ -734,6 +734,9 @@ class Stocker():
 
         # Limit to 10 largest changepoints
         c_data = c_data[:10]
+        
+        # Resort by Date
+        c_data = c_data.sort_values(by='Date', ascending=True)
 
         # Separate into negative and positive changepoints
         cpos_data = c_data[c_data['delta'] > 0]
@@ -762,7 +765,7 @@ class Stocker():
                        linewidth= 1.2, label='Positive Changepoints')
 
             plt.legend(prop={'size':10});
-            plt.xlabel('Date'); plt.ylabel('Price ($)'); plt.title('Stock Price with Changepoints')
+            plt.xlabel('Date'); plt.ylabel('Price ($)'); plt.title('%s Changepoints' % self.symbol)
             plt.show()
         
         # Search for search term in google news
