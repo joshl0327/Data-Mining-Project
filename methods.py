@@ -77,6 +77,41 @@ def get_multiple_close(columns, stocks, start_date, end_date):
         i+=1
     return stock_plot
 
+def dpc(stock_close):
+    # Daily returns
+    daily_pct_change = stock_close.pct_change()
+    # Replace NA values with 0
+    daily_pct_change.fillna(0, inplace=True)
+    
+    return daily_pct_change
+    
+
+def volatility(stock_plot):
+    reset_plot()
+    columns = list(stock_plot.columns.values)
+    i = 1;
+
+    while (i < len(columns)):
+        plt.style.use('fivethirtyeight');
+        daily_pct_change = dpc(stock_plot[columns[i]])
+        width = 1
+        if columns[i] == 'SPY':
+            width = 3;
+        # Define the minumum of periods to consider 
+        min_periods = 75 
+
+        # Calculate the volatility
+        vol = daily_pct_change.rolling(min_periods).std() * np.sqrt(min_periods) 
+        
+        plt.plot(stock_plot['Date'], vol, label = columns[i], linewidth = width, alpha = 0.8)
+        plt.xlabel('Date'); plt.ylabel('????'); plt.title('Stock Volatility'); 
+        
+        #vol.plot()
+        plt.legend(prop={'size':10})
+        plt.grid(color = 'k', alpha = 0.4);
+        i+=1
+    plt.show();
+    
 
 def plot_multiple(columns, stock_plot, plot_type='basic'):
     
@@ -118,11 +153,12 @@ def changepoint_stocker(stocker_list):
         x.changepoint_date_analysis()
 
 def candlestick(name,start,end):
+    reset_plot()
     stock = quandl.get("WIKI/"+ name, start_date=start, end_date=end)
     stock["20d"] = np.round(stock["Adj. Close"].rolling(window = 20, center = False).mean(), 2)
     stock["50d"] = np.round(stock["Adj. Close"].rolling(window = 50, center = False).mean(), 2)
     stock["200d"] = np.round(stock["Adj. Close"].rolling(window = 200, center = False).mean(), 2) 
-    pandas_candlestick_ohlc(stock.loc['2016-01-04':'2016-12-31',:], otherseries = ["20d", "50d", "200d"], adj=True)
+    pandas_candlestick_ohlc(stock.loc[start:end,:], otherseries = ["20d", "50d", "200d"], adj=True)
 
 def pandas_candlestick_ohlc(dat, stick = "day", adj = False, otherseries = None):
     """
