@@ -765,17 +765,21 @@ class Stocker():
                        linewidth= 1.2, label='Positive Changepoints')
 
             plt.legend(prop={'size':10});
-            plt.xlabel('Date'); plt.ylabel('Price ($)'); plt.title('%s Changepoints' % self.symbol)
+            plt.xlabel('Date'); plt.ylabel('Price ($)'); 
+            plt.title('%s Changepoints: %s to %s' % (self.symbol, train['Date'].iloc[0].date(), train['Date'].iloc[-1].date()))
             plt.show()
         
         # Search for search term in google news
         # Show related queries, rising related queries
         # Graph changepoints, search frequency, stock price
         if search:
+            print(str(pd.Timestamp(min(train['Date']))))
             date_range = ['%s %s' % (str(pd.Timestamp(min(train['Date']))), str(pd.Timestamp(max(train['Date']))))]
 
             # Get the Google Trends for specified terms and join to training dataframe
-            trends, related_queries = self.retrieve_google_trends(search, date_range)
+            #
+            #This has been modified by us as previously this function would repeatedly cause errors
+            trends, related_queries = self.custom_trends_retrieval(search, date_range)
 
             if (trends is None)  or (related_queries is None):
                 print('No search trends found for %s' % search)
@@ -983,3 +987,25 @@ class Stocker():
         plt.xticks(results['cps'], results['cps'])
         plt.legend(prop={'size':10})
         plt.show();
+        
+    def custom_trends_retrieval(self, search, date_range):
+        
+        # Set up the trend fetching object
+        pytrends = TrendReq(hl='en-US', tz=360)
+        kw_list = search
+
+        try:
+            # Create the search object
+            pytrends.build_payload(kw_list, cat=0, timeframe=date_range, geo='', gprop='news')
+
+            # Retrieve the interest over time
+            trends = pytrends.interest_over_time()
+
+            related_queries = pytrends.related_queries()
+
+        except Exception as e:
+            print('\nGoogle Search Trend retrieval failed.')
+            print(e)
+            return
+        
+        return trends, related_queries
