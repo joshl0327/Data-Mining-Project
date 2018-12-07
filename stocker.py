@@ -26,7 +26,7 @@ class Stocker():
         self.symbol = ticker
         
         # Use Personal Api Key
-        # quandl.ApiConfig.api_key = 'YourKeyHere'
+        quandl.ApiConfig.api_key = '-XhTaxmJQPsTM9-z8RGe'
 
         # Retrieval the financial data
         try:
@@ -743,7 +743,7 @@ class Stocker():
         if not search:
         
             print('\nChangepoints sorted by slope rate of change (2nd derivative):\n')
-            print(c_data.loc[:, ['Date', 'Adj. Close', 'delta']][:5])
+            print(c_data.loc[:, ['Date', 'Adj. Close', 'delta']][:10])
 
             # Line plot showing actual values, estimated values, and changepoints
             self.reset_plot()
