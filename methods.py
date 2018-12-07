@@ -12,6 +12,7 @@ import quandl
 import datetime
 from stocker import Stocker
 
+
 def get_stocks(names, start, end):
     return yf.download(names,start, end)
     
@@ -36,6 +37,18 @@ def add_spy(spy, stocks):
     stocks.rename(columns={'Adj Close':'SPY'}, inplace=True)
     return stocks
 
+def reset_plot():
+    # Restore default parameters
+    plt.rcParams.update(plt.rcParamsDefault)
+
+    # Adjust a few parameters to liking
+    plt.rcParams['figure.figsize'] = (8, 5)
+    plt.rcParams['axes.labelsize'] = 10
+    plt.rcParams['xtick.labelsize'] = 8
+    plt.rcParams['ytick.labelsize'] = 8
+    plt.rcParams['axes.titlesize'] = 14
+    plt.rcParams['text.color'] = 'k'
+
 def get_stocker(names):
     stocker_data = []
     for x in names:
@@ -47,6 +60,51 @@ def plot_stocker(stocker_list, start, end):
     for x in stocker_list:
         x.plot_stock(start_date = start, end_date = end, stats = ['Daily Change', 'Adj. Volume'], plot_type='pct')
     return
+
+def get_multiple_close(columns, stocks, start_date, end_date):
+    stock_plot = stocks[0].make_df(start_date, end_date)
+    stock_plot = stock_plot[['Date','Adj. Close']].rename(columns={'Adj. Close': columns[0]})
+    stock_plot.set_index('Date', inplace=True, drop=False)
+    stock_plot.iloc[0].head()
+    
+    #Adds in other stocks to df
+    i = 1
+    while (i<len(stocks)):
+        stock_close = stocks[i].make_df(start_date, end_date)
+        stock_close = stock_close[['Date','Adj. Close']].rename(columns={'Adj. Close': columns[i]})
+        stock_close.set_index('Date', inplace=True)
+        stock_plot = stock_plot.join(stock_close[columns[i]])
+        i+=1
+    return stock_plot
+
+
+def plot_multiple(columns, stock_plot, plot_type='basic'):
+    
+    reset_plot()
+    i = 0
+    while (i < len(columns)):
+        # Percentage y-axis        
+        plt.style.use('fivethirtyeight');
+        width = 1
+        if columns[i] == 'SPY':
+            width = 3;
+        
+        if plot_type == 'returns': 
+            s= stock_plot.loc[:,columns[i]].first_valid_index()
+            plt.plot(stock_plot['Date'], stock_plot.loc[:,columns[i]].transform(lambda x: x / x[s]), 
+                     label = columns[i], linewidth = width,alpha = 0.8)          
+            plt.xlabel('Date'); plt.ylabel('Returns(%)'); plt.title('Stock History');
+            plt.axhline(y = 1, color = "black", lw = 2);
+
+        # Stat y-axis
+        elif plot_type == 'basic':
+            plt.plot(stock_plot['Date'], stock_plot.loc[:,columns[i]], label = columns[i], linewidth = width,alpha = 0.8)
+            plt.xlabel('Date'); plt.ylabel('US $'); plt.title('Stock History'); 
+
+        plt.legend(prop={'size':10})
+        plt.grid(color = 'k', alpha = 0.4);
+        i+=1
+    plt.show();
        
 def model_stocker(stocker_list):
     for x in stocker_list:
