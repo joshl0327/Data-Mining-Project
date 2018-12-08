@@ -13,30 +13,37 @@ import datetime
 from stocker import Stocker
 
 
+#Gets stock data from Yahoo! Finance
 def get_stocks(names, start, end):
-    return yf.download(names,start, end)
-    
+    return yf.download(names,start, end)    
 
+#Get's the Adj. Close for the stocks, plots the time series data, 
+#and returns a DataFrame consisting of that information
 def get_close(stocks):
     stocks_close = stocks['Adj Close']
     stocks_close.plot()
     plt.show()
     return stocks_close
 
+#Computes the returns from an Adj. Close Dataframe, plots the returns,
+#and returns a dataframe with that information
 def get_returns(stocks):
     stocks = stocks.apply(lambda x: x / x[0])
     stocks.plot(grid = True).axhline(y = 1, color = "black", lw = 2)
     return stocks
 
+#Gets SPY data from DataReader
 def get_spy(location,start,end):
     spy = web.DataReader("SPY", location, start, end)
     return spy
 
+#Adds SPY's Adj. Close to an existing df
 def add_spy(spy, stocks):
     stocks = stocks.join(spy['Adj Close'])
     stocks.rename(columns={'Adj Close':'SPY'}, inplace=True)
     return stocks
 
+#Copied Stocker's reset_plot method to keep our plots uniform, without needing a Stocker object
 def reset_plot():
     # Restore default parameters
     plt.rcParams.update(plt.rcParamsDefault)
@@ -47,8 +54,9 @@ def reset_plot():
     plt.rcParams['xtick.labelsize'] = 8
     plt.rcParams['ytick.labelsize'] = 8
     plt.rcParams['axes.titlesize'] = 14
-    plt.rcParams['text.color'] = 'k'
-
+    plt.rcParams['text.color'] = 'k';
+    
+#Creates Stocker objects for each stock index and returns a list of them    
 def get_stocker(names):
     stocker_data = []
     for x in names:
@@ -56,11 +64,13 @@ def get_stocker(names):
         stocker_data.append(stock)
     return stocker_data
 
+#Plots the stocker objects
 def plot_stocker(stocker_list, start, end):
     for x in stocker_list:
         x.plot_stock(start_date = start, end_date = end, stats = ['Daily Change', 'Adj. Volume'], plot_type='pct')
     return
 
+#gets multiple stocker objects
 def get_multiple_close(columns, stocks, start_date, end_date):
     stock_plot = stocks[0].make_df(start_date, end_date)
     stock_plot = stock_plot[['Date','Adj. Close']].rename(columns={'Adj. Close': columns[0]})
@@ -77,6 +87,7 @@ def get_multiple_close(columns, stocks, start_date, end_date):
         i+=1
     return stock_plot
 
+#gets the daily percentage change
 def dpc(stock_close):
     # Daily returns
     daily_pct_change = stock_close.pct_change()
@@ -85,7 +96,7 @@ def dpc(stock_close):
     
     return daily_pct_change
     
-
+#plots volatility
 def volatility(stock_plot):
     reset_plot()
     columns = list(stock_plot.columns.values)
@@ -112,7 +123,7 @@ def volatility(stock_plot):
         i+=1
     plt.show();
     
-
+#plots multiple stocker objects
 def plot_multiple(columns, stock_plot, plot_type='basic'):
     
     reset_plot()
@@ -140,7 +151,8 @@ def plot_multiple(columns, stock_plot, plot_type='basic'):
         plt.grid(color = 'k', alpha = 0.4);
         i+=1
     plt.show();
-       
+
+#gets models for stocker objects
 def model_stocker(stocker_list):
     for x in stocker_list:
         model, model_data = x.create_prophet_model()
@@ -148,6 +160,7 @@ def model_stocker(stocker_list):
         plt.show()
     return
 
+#gets changepoint analysis
 def changepoint_stocker(stocker_list):
     for x in stocker_list:
         x.changepoint_date_analysis()
