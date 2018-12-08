@@ -293,7 +293,7 @@ class Stocker():
         matplotlib.rcParams['text.color'] = 'k'
     
     # Method to linearly interpolate prices on the weekends
-    def resample(self, dataframe):
+    def reample(self, dataframe):
         # Change the index and resample at daily level
         dataframe = dataframe.set_index('ds')
         dataframe = dataframe.resample('D')
@@ -301,6 +301,7 @@ class Stocker():
         # Reset the index and interpolate nan values
         dataframe = dataframe.reset_index(level=0)
         dataframe = dataframe.interpolate()
+        print(type(dataframe))
         return dataframe
     
     # Remove weekends from a dataframe
@@ -773,12 +774,10 @@ class Stocker():
         # Show related queries, rising related queries
         # Graph changepoints, search frequency, stock price
         if search:
-            print(str(pd.Timestamp(min(train['Date']))))
-            date_range = ['%s %s' % (str(pd.Timestamp(min(train['Date']))), str(pd.Timestamp(max(train['Date']))))]
-
             # Get the Google Trends for specified terms and join to training dataframe
             #
             #This has been modified by us as previously this function would repeatedly cause errors
+            date_range = ['%s %s' % (str(pd.Timestamp(min(train['Date'])).date()), str(pd.Timestamp(max(train['Date'])).date()))]
             trends, related_queries = self.custom_trends_retrieval(search, date_range)
 
             if (trends is None)  or (related_queries is None):
@@ -792,8 +791,7 @@ class Stocker():
             print(related_queries[search]['rising'].head())
 
             # Upsample the data for joining with training data
-            trends = trends.resample('D')
-
+            trends = trends.resample("1D").interpolate()
             trends = trends.reset_index(level=0)
             trends = trends.rename(columns={'date': 'ds', search: 'freq'})
 
@@ -992,8 +990,12 @@ class Stocker():
         
         # Set up the trend fetching object
         pytrends = TrendReq(hl='en-US', tz=360)
-        kw_list = search
-
+        kw_list = [search]
+        pytrends.build_payload(kw_list)
+        #pytrends.build_payload(kw_list, cat=0, geo='', gprop='news')
+        trends = pytrends.interest_over_time()
+        related_queries = pytrends.related_queries()
+        '''
         try:
             # Create the search object
             pytrends.build_payload(kw_list, cat=0, timeframe=date_range, geo='', gprop='news')
@@ -1007,5 +1009,5 @@ class Stocker():
             print('\nGoogle Search Trend retrieval failed.')
             print(e)
             return
-        
+         '''       
         return trends, related_queries

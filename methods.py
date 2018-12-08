@@ -104,7 +104,7 @@ def volatility(stock_plot):
         vol = daily_pct_change.rolling(min_periods).std() * np.sqrt(min_periods) 
         
         plt.plot(stock_plot['Date'], vol, label = columns[i], linewidth = width, alpha = 0.8)
-        plt.xlabel('Date'); plt.ylabel('????'); plt.title('Stock Volatility'); 
+        plt.xlabel('Date'); plt.title('Stock Volatility'); 
         
         #vol.plot()
         plt.legend(prop={'size':10})
@@ -128,13 +128,13 @@ def plot_multiple(columns, stock_plot, plot_type='basic'):
             s= stock_plot.loc[:,columns[i]].first_valid_index()
             plt.plot(stock_plot['Date'], stock_plot.loc[:,columns[i]].transform(lambda x: x / x[s]), 
                      label = columns[i], linewidth = width,alpha = 0.8)          
-            plt.xlabel('Date'); plt.ylabel('Returns(%)'); plt.title('Stock History');
+            plt.xlabel('Date'); plt.ylabel('Returns'); plt.title('Stock History - Returns');
             plt.axhline(y = 1, color = "black", lw = 2);
 
         # Stat y-axis
         elif plot_type == 'basic':
             plt.plot(stock_plot['Date'], stock_plot.loc[:,columns[i]], label = columns[i], linewidth = width,alpha = 0.8)
-            plt.xlabel('Date'); plt.ylabel('US $'); plt.title('Stock History'); 
+            plt.xlabel('Date'); plt.ylabel('US $'); plt.title('Stock History - Stock Price'); 
 
         plt.legend(prop={'size':10})
         plt.grid(color = 'k', alpha = 0.4);
